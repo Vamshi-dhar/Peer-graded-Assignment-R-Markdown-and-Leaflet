@@ -1,0 +1,48 @@
+---
+title: "Visualization of Airports in India"
+author: "H K Vamshidhar"
+date: "October 8, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1.Importing Packages
+```{r}
+suppressMessages(library(rmarkdown))
+suppressMessages(library(leaflet))
+suppressMessages(library(dplyr))
+suppressMessages(library(RCurl))
+suppressMessages(library(rsconnect))
+suppressMessages(library(knitr))
+```
+
+## 2.Getting and Cleaning data
+```{r cache=TRUE}
+URL <- ""
+download.file(url='http://ourairports.com/countries/IN/airports.csv', destfile='Indian_airports.csv')
+In_airports <- read.csv("Indian_airports.csv", stringsAsFactors = FALSE, na.strings = "", skip = 2)
+names_data <- read.csv("Indian_airports.csv", header = TRUE,stringsAsFactors = FALSE, na.strings = "", nrows = 1)
+names(In_airports) <- names(names_data)
+```
+
+## 3.Selecting variables for visuvalization:
+```{r cache=TRUE}
+In_airports$name_munisp <- paste(In_airports$name, In_airports$municipality, sep = ",")
+sel_vars <- c("name_munisp", "latitude_deg", "longitude_deg","elevation_ft")
+In_airports <- In_airports[, sel_vars]
+names(In_airports)[c(2,3)] <- c("lat", "lng")
+```
+
+## 4.Plotting Interactive graphs using leaflet package:
+```{r cache=TRUE}
+my_map <- In_airports %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(clusterOptions = markerClusterOptions(), popup = In_airports$name_munisp) %>% 
+  addCircles(weight = 2, radius = sqrt(In_airports$elevation_ft) * 40)
+my_map
+```
+
